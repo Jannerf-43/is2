@@ -135,30 +135,49 @@
     </div>
 
     <script>
-      // Apps Script 배포 후 발급받은 웹 앱 URL을 여기에 붙여넣으세요.
-      const SCRIPT_URL =
-        'https://script.google.com/macros/s/AKfycbzf3IMvBPYKZ7VLX__5fBIijJ40fq38uoStBGErirW7-2QWHlMfZREZBoKVsTLGvXDz/exec'
+      const SCRIPT_URL = '여기에_웹앱_URL을_넣으세요'
+      const FIVE_MIN_MS = 5 * 60 * 1000
+
+      // [핵심 1] 학우가 3번 질문을 읽는 동안 백그라운드에서 5분 캐시 통계를 미리 받아옴
+      ;(function prefetchStats() {
+        if (SCRIPT_URL === '여기에_웹앱_URL을_넣으세요') return
+        const cachedTime = Number(localStorage.getItem('stats_cache_time') || 0)
+
+        // 저장된 지 5분이 넘었거나 데이터가 없으면 백그라운드에서 미리 가져오기
+        if (
+          Date.now() - cachedTime > FIVE_MIN_MS ||
+          !localStorage.getItem('stats_cache_data')
+        ) {
+          fetch(SCRIPT_URL)
+            .then((res) => res.json())
+            .then((stats) => {
+              localStorage.setItem('stats_cache_data', JSON.stringify(stats))
+              localStorage.setItem('stats_cache_time', String(Date.now()))
+            })
+            .catch((err) => console.warn('백그라운드 통계 프리패치 실패:', err))
+        }
+      })()
 
       const posCuts = [
         {
           text: '어색한 정적을 깨고 분위기를 살려줘서 오히려 고맙다',
           sfx: '고마움 👏',
-          img: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=600&q=80',
+          img: 'images/q3_p1.png',
         },
         {
           text: '답이 조금 틀리더라도 용기 내어 참여하는 모습이 멋지다',
           sfx: '응원 ✨',
-          img: 'https://images.unsplash.com/photo-1531545514256-b1400bc00f31?auto=format&fit=crop&w=600&q=80',
+          img: 'images/q3_p2.png',
         },
         {
           text: '밝게 인사하는 모습을 보면 나도 덩달아 기분이 좋아진다',
           sfx: '기분 좋음 🌱',
-          img: 'https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=600&q=80',
+          img: 'images/q3_p3.png',
         },
         {
           text: '전혀 이상하게 보지 않고 자연스러운 일상이라고 생각한다',
           sfx: '자연스러움 🙂',
-          img: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80',
+          img: 'images/q3_p4.png',
         },
       ]
 
@@ -203,12 +222,12 @@
               div.onclick = () => {
                 div.classList.add('action-picked')
                 sessionStorage.setItem('q3_choice', item.text)
-                setTimeout(openFinalScene, 260)
+                setTimeout(openFinalScene, 240)
               }
               grid.appendChild(div)
             })
           }
-        }, 260)
+        }, 240)
       }
 
       function openFinalScene() {
@@ -219,7 +238,7 @@
         document.getElementById('qText').innerText =
           '모든 질문에 응답해 주셨습니다!'
         document.getElementById('qGuide').innerText =
-          '아래 버튼을 누르면 나의 선택에 맞춘 결과와 통계가 공개됩니다.'
+          '아래 버튼을 누르면 기다림 없이 즉시 결과가 공개됩니다.'
       }
 
       function resetQ3() {
@@ -238,15 +257,16 @@
           '평소 느끼는 솔직한 생각을 선택해 주세요.'
       }
 
-      async function submitAndGoResult() {
+      // [핵심 2] 제출 클릭 시 기다리지 않고(No await) 백그라운드 전송 후 0.1초 만에 즉시 페이지 이동!
+      function submitAndGoResult() {
         setGauge(100)
         const btn = document.getElementById('submitBtn')
         btn.disabled = true
-        btn.innerText = '실시간 통계 연동 중...'
         sessionStorage.setItem(
           'q3_comment',
           document.getElementById('q3Comment').value,
         )
+        sessionStorage.setItem('just_submitted', 'true') // 내 응답 +1 즉시 반영용 플래그
 
         const payload = {
           q1: sessionStorage.getItem('q1') || 'Yes',
@@ -262,24 +282,22 @@
           q3_comment: sessionStorage.getItem('q3_comment') || '',
         }
 
-        if (SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
-          try {
-            const res = await fetch(SCRIPT_URL, {
-              method: 'POST',
-              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: JSON.stringify(payload),
-            })
-            const liveStats = await res.json()
-            sessionStorage.setItem('live_stats', JSON.stringify(liveStats))
-          } catch (e) {
-            console.error('통계 연동 실패, 기본 통계를 출력합니다.', e)
-          }
+        if (SCRIPT_URL !== '여기에_웹앱_URL을_넣으세요') {
+          // keepalive: true 옵션으로 페이지가 넘어가도 브라우저가 끝까지 시트에 데이터를 저장함
+          fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            keepalive: true,
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload),
+          }).catch((e) => console.warn(e))
         }
 
+        // 서버 응답을 기다리지 않고 즉시 결과 창으로 전환!
         document.body.classList.add('page-exit')
         setTimeout(() => {
           window.location.href = 'result.html'
-        }, 220)
+        }, 150)
       }
     </script>
   </body>

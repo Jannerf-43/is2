@@ -423,15 +423,29 @@
       }
 
       // 초기 렌더링 후, 서버 URL이 설정되어 있고 최신 데이터가 필요하면 백그라운드 갱신
-      const cached = sessionStorage.getItem('live_stats')
-      renderPage(cached ? JSON.parse(cached) : fallbackStats)
+      // result.html 하단 렌더링 호출부 (기존 스크립트 맨 아랫부분 교체)
+      const rawCache = localStorage.getItem('stats_cache_data')
+      let statsToUse = rawCache ? JSON.parse(rawCache) : fallbackStats
 
-      if (!cached && SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
-        fetch(SCRIPT_URL)
-          .then((r) => r.json())
-          .then((fresh) => renderPage(fresh))
-          .catch((e) => console.error(e))
+      // 방금 설문을 제출하고 넘어온 경우, 5분 전 캐시 통계에 내 응답을 +1 즉시 반영하여 출력
+      if (sessionStorage.getItem('just_submitted') === 'true') {
+        statsToUse.total = (statsToUse.total || 0) + 1
+        statsToUse.q1Reasons = statsToUse.q1Reasons || {}
+        statsToUse.q2Reasons = statsToUse.q2Reasons || {}
+        statsToUse.counts = statsToUse.counts || {}
+
+        statsToUse.q1Reasons[q1Reason] =
+          (statsToUse.q1Reasons[q1Reason] || 0) + 1
+        statsToUse.q2Reasons[q2Reason] =
+          (statsToUse.q2Reasons[q2Reason] || 0) + 1
+        statsToUse.counts[q3Choice] = (statsToUse.counts[q3Choice] || 0) + 1
+
+        localStorage.setItem('stats_cache_data', JSON.stringify(statsToUse))
+        sessionStorage.removeItem('just_submitted')
       }
+
+      // 대기 시간 0초: 즉시 화면 렌더링
+      renderPage(statsToUse)
     </script>
   </body>
 </html>
