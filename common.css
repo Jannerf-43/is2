@@ -1,0 +1,347 @@
+:root {
+  --ink: #111827;
+  --paper: #fffdf9;
+  --bg-main: #e2e8f0;
+  --blue-accent: #2563eb;
+  --yellow-point: #facc15;
+  --green-thanks: #10b981;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family:
+    'Pretendard',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: var(--bg-main);
+  background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
+  background-size: 16px 16px;
+  color: var(--ink);
+}
+
+body {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+body.page-exit {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+.toon-page {
+  width: 100%;
+  max-width: 1240px;
+  height: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+/* 상단 질문 헤더 + % 진행률 게이지 */
+.narration-bar {
+  flex-shrink: 0;
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  padding: 10px 14px;
+  box-shadow: 4px 4px 0px var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.step-tag {
+  flex-shrink: 0;
+  background: var(--ink);
+  color: var(--yellow-point);
+  font-size: 0.75rem;
+  font-weight: 900;
+  padding: 3px 9px;
+  border-radius: 6px;
+}
+
+/* 진행사항 % 게이지 스타일 */
+.gauge-wrap {
+  flex: 1;
+  max-width: 320px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.gauge-track {
+  flex: 1;
+  height: 12px;
+  background: #e2e8f0;
+  border: 2px solid var(--ink);
+  border-radius: 99px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.gauge-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--blue-accent), #3b82f6);
+  border-right: 2px solid var(--ink);
+  width: 0%;
+  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gauge-text {
+  font-size: 0.82rem;
+  font-weight: 900;
+  color: var(--blue-accent);
+  min-width: 38px;
+  text-align: right;
+}
+
+.rewind-btn {
+  flex-shrink: 0;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px var(--ink);
+}
+.rewind-btn:hover {
+  background: var(--yellow-point);
+}
+
+.speech-question {
+  font-size: clamp(1rem, 2vw, 1.38rem);
+  font-weight: 900;
+  line-height: 1.3;
+  word-break: keep-all;
+}
+
+.speech-guide {
+  font-size: clamp(0.76rem, 1.3vw, 0.86rem);
+  color: #475569;
+  font-weight: 600;
+}
+
+/* 선택지 스테이지 */
+.cut-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.scene-anim {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  animation: cutIn 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes cutIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cut-grid {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: grid;
+  gap: 8px;
+}
+
+.cuts-2 {
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+.cuts-3 {
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+.cuts-4 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+.cuts-5 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+.cuts-5 .toon-cut:nth-child(5) {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 768px) {
+  body {
+    padding: 14px;
+  }
+  .toon-page {
+    gap: 12px;
+  }
+  .cut-grid {
+    gap: 12px;
+  }
+
+  .cuts-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .cuts-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .cuts-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+  }
+  .cuts-5 {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+  }
+  .cuts-5 .toon-cut:nth-child(1),
+  .cuts-5 .toon-cut:nth-child(2),
+  .cuts-5 .toon-cut:nth-child(3) {
+    grid-column: span 2;
+  }
+  .cuts-5 .toon-cut:nth-child(4),
+  .cuts-5 .toon-cut:nth-child(5) {
+    grid-column: span 3;
+  }
+}
+
+.toon-cut {
+  position: relative;
+  min-height: 0;
+  height: 100%;
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  background: #000;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 4px 4px 0px var(--ink);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s ease;
+}
+
+.toon-cut img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition:
+    transform 0.35s ease,
+    filter 0.25s ease;
+}
+
+.toon-cut:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--ink);
+}
+.toon-cut:hover img {
+  transform: scale(1.05);
+}
+
+.toon-cut.action-picked {
+  border-color: var(--yellow-point);
+  box-shadow:
+    0 0 0 3px var(--ink),
+    6px 6px 0px var(--ink);
+  transform: scale(0.98);
+}
+.toon-cut.action-picked img {
+  transform: scale(1.1);
+  filter: brightness(1.08);
+}
+
+.sfx-stamp {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--yellow-point);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-weight: 900;
+  font-size: clamp(0.72rem, 1.2vw, 0.85rem);
+  box-shadow: 2px 2px 0px var(--ink);
+  transform: scale(0) rotate(-6deg);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 3;
+}
+
+.toon-cut:hover .sfx-stamp {
+  transform: scale(0.95) rotate(-4deg);
+}
+.toon-cut.action-picked .sfx-stamp {
+  transform: scale(1.08) rotate(4deg);
+  background: #fff;
+}
+
+.cut-dialogue {
+  position: relative;
+  z-index: 2;
+  margin: 6px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  box-shadow: 2px 2px 0px var(--ink);
+  font-size: clamp(0.8rem, 1.4vw, 1rem);
+  font-weight: 800;
+  line-height: 1.25;
+  word-break: keep-all;
+  transition:
+    background 0.2s,
+    transform 0.2s;
+}
+
+@media (min-width: 768px) {
+  .cut-dialogue {
+    margin: 10px;
+    padding: 11px 14px;
+  }
+}
+
+.toon-cut.action-picked .cut-dialogue {
+  background: var(--yellow-point);
+  transform: translateY(-2px);
+}

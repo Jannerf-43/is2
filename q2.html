@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>질문 2 - 용기가 곧 배려다!</title>
+    <link rel="stylesheet" href="common.css" />
+  </head>
+  <body>
+    <div class="toon-page">
+      <header class="narration-bar">
+        <div class="header-top">
+          <span class="step-tag" id="stepTag">질문 2 / 3</span>
+          <div class="gauge-wrap">
+            <div class="gauge-track">
+              <div class="gauge-fill" id="gaugeFill" style="width: 50%"></div>
+            </div>
+            <span class="gauge-text" id="gaugeText">50%</span>
+          </div>
+          <button
+            class="rewind-btn"
+            id="backBtn"
+            style="display: none"
+            onclick="backToYn()"
+          >
+            ◀ 이전
+          </button>
+        </div>
+        <h1 class="speech-question" id="qText">
+          셔틀버스 기사님께 먼저 인사하는 것이 망설여진 적이 있나요?
+        </h1>
+        <p class="speech-guide" id="qGuide">
+          버스를 타거나 내릴 때 나의 모습과 가까운 쪽을 선택해 주세요.
+        </p>
+      </header>
+
+      <main class="cut-stage">
+        <div class="scene-anim" id="sceneYn">
+          <div class="cut-grid cuts-2">
+            <div class="toon-cut" onclick="pickYn(this, 'Yes')">
+              <img
+                src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=900&q=80"
+                alt="인사를 망설이는 모습"
+              />
+              <div class="sfx-stamp">망설임 💭</div>
+              <div class="cut-dialogue">
+                네 (Yes) — 기사님께 먼저 인사하기가 망설여진 적 있어요
+              </div>
+            </div>
+
+            <div class="toon-cut" onclick="pickYn(this, 'No')">
+              <img
+                src="https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=900&q=80"
+                alt="밝게 인사하는 모습"
+              />
+              <div class="sfx-stamp">반가운 인사 👋</div>
+              <div class="cut-dialogue">
+                아니오 (No) — 기사님께 먼저 밝게 인사하는 편이에요
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="scene-anim" id="sceneReasons" style="display: none">
+          <div class="cut-grid cuts-3" id="reasonsCutGrid"></div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const q2Cuts = {
+        Yes: [
+          {
+            text: '다른 사람들의 시선이 신경 쓰여서',
+            sfx: '시선의식 👀',
+            img: 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=600&q=80',
+          },
+          {
+            text: '인사를 안 받아줄까 봐',
+            sfx: '걱정 💧',
+            img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=600&q=80',
+          },
+          {
+            text: '어색해서',
+            sfx: '어색함 😅',
+            img: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=600&q=80',
+          },
+        ],
+        No: [
+          {
+            text: '감사한 마음을 표현하고 싶어서',
+            sfx: '감사 표현 💖',
+            img: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=600&q=80',
+          },
+          {
+            text: '인사는 기본적인 예의라고 생각해서',
+            sfx: '기본 예의 ✨',
+            img: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=600&q=80',
+          },
+          {
+            text: '인사가 습관이 되어서',
+            sfx: '자연스러움 🌿',
+            img: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=600&q=80',
+          },
+        ],
+      }
+
+      function setGauge(percent) {
+        document.getElementById('gaugeFill').style.width = percent + '%'
+        document.getElementById('gaugeText').innerText = percent + '%'
+      }
+
+      function pickYn(cutEl, answer) {
+        cutEl.classList.add('action-picked')
+        sessionStorage.setItem('q2', answer)
+
+        setTimeout(() => {
+          setGauge(65)
+          document.getElementById('sceneYn').style.display = 'none'
+          document.getElementById('sceneReasons').style.display = 'flex'
+          document.getElementById('backBtn').style.display = 'inline-block'
+          document.getElementById('stepTag').innerText = '질문 2-1 / 3'
+          document.getElementById('qText').innerText =
+            answer === 'Yes'
+              ? '기사님께 인사가 망설여졌던 이유는 무엇인가요?'
+              : '망설이지 않고 먼저 인사할 수 있었던 이유는 무엇인가요?'
+          document.getElementById('qGuide').innerText =
+            '가장 공감되는 이유 하나를 선택해 주세요.'
+
+          const grid = document.getElementById('reasonsCutGrid')
+          grid.innerHTML = ''
+          q2Cuts[answer].forEach((item) => {
+            const div = document.createElement('div')
+            div.className = 'toon-cut'
+            div.innerHTML = `
+          <img src="${item.img}" alt="${item.text}">
+          <div class="sfx-stamp">${item.sfx}</div>
+          <div class="cut-dialogue">${item.text}</div>
+        `
+            div.onclick = () => pickReasonAndNext(div, item.text)
+            grid.appendChild(div)
+          })
+        }, 260)
+      }
+
+      function backToYn() {
+        setGauge(50)
+        document
+          .querySelectorAll('#sceneYn .toon-cut')
+          .forEach((el) => el.classList.remove('action-picked'))
+        document.getElementById('sceneReasons').style.display = 'none'
+        document.getElementById('sceneYn').style.display = 'flex'
+        document.getElementById('backBtn').style.display = 'none'
+        document.getElementById('stepTag').innerText = '질문 2 / 3'
+        document.getElementById('qText').innerText =
+          '셔틀버스 기사님께 먼저 인사하는 것이 망설여진 적이 있나요?'
+        document.getElementById('qGuide').innerText =
+          '버스를 타거나 내릴 때 나의 모습과 가까운 쪽을 선택해 주세요.'
+      }
+
+      function pickReasonAndNext(cutEl, reasonText) {
+        cutEl.classList.add('action-picked')
+        sessionStorage.setItem('q2_reason', reasonText)
+        setGauge(75)
+
+        setTimeout(() => {
+          document.body.classList.add('page-exit')
+          setTimeout(() => {
+            window.location.href = 'q3.html'
+          }, 220)
+        }, 260)
+      }
+    </script>
+  </body>
+</html>

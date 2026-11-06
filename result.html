@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>설문 결과 - 용기가 곧 배려다!</title>
+    <link rel="stylesheet" href="common.css" />
+    <style>
+      html,
+      body {
+        overflow-y: auto;
+        height: auto;
+        min-height: 100dvh;
+      }
+      @media (min-width: 900px) {
+        html,
+        body {
+          height: 100dvh;
+          overflow: hidden;
+        }
+      }
+
+      .epilogue-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        flex: 1;
+        min-height: 0;
+      }
+      @media (min-width: 900px) {
+        .epilogue-grid {
+          grid-template-columns: 1.15fr 0.85fr;
+          gap: 14px;
+        }
+      }
+      .custom-cards-col {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-height: 0;
+      }
+      .toon-result-card {
+        background: var(--paper);
+        border: 3px solid var(--ink);
+        border-radius: 14px;
+        padding: 14px 16px;
+        box-shadow: 4px 4px 0px var(--ink);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 8px;
+        flex: 1;
+      }
+      .card-courage {
+        background: #eff6ff;
+      }
+      .card-thanks {
+        background: #ecfdf5;
+      }
+
+      .choice-pill {
+        display: inline-block;
+        align-self: flex-start;
+        background: var(--ink);
+        color: #fff;
+        font-size: 0.74rem;
+        font-weight: 800;
+        padding: 3px 9px;
+        border-radius: 6px;
+      }
+      .result-headline {
+        font-size: clamp(1rem, 1.6vw, 1.18rem);
+        font-weight: 900;
+        line-height: 1.3;
+        color: var(--ink);
+      }
+      .speech-bubble-box {
+        background: #ffffff;
+        border: 2px solid var(--ink);
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: clamp(0.82rem, 1.2vw, 0.92rem);
+        font-weight: 600;
+        line-height: 1.45;
+        box-shadow: 2px 2px 0px var(--ink);
+      }
+      .matched-stat-badge {
+        background: var(--yellow-point);
+        border: 2px solid var(--ink);
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: clamp(0.78rem, 1.1vw, 0.85rem);
+        font-weight: 800;
+        line-height: 1.35;
+      }
+      .stat-board {
+        background: var(--paper);
+        border: 3px solid var(--ink);
+        border-radius: 14px;
+        padding: 16px;
+        box-shadow: 4px 4px 0px var(--ink);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .big-stat-num {
+        font-size: clamp(1.7rem, 2.5vw, 2.2rem);
+        font-weight: 900;
+        color: var(--blue-accent);
+        margin: 2px 0;
+      }
+      .bar-row {
+        margin-top: 8px;
+        font-size: 0.8rem;
+        font-weight: 700;
+      }
+      .bar-track {
+        height: 10px;
+        background: #e2e8f0;
+        border: 2px solid var(--ink);
+        border-radius: 99px;
+        overflow: hidden;
+        margin-top: 3px;
+      }
+      .bar-fill {
+        height: 100%;
+        background: var(--blue-accent);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toon-page">
+      <header class="narration-bar">
+        <div class="header-top">
+          <span class="step-tag"
+            >설문 완료 · 이로운 2조 캠페인: 용기가 곧 배려다!</span
+          >
+          <div class="gauge-wrap">
+            <div class="gauge-track">
+              <div
+                class="gauge-fill"
+                style="width: 100%; background: var(--green-thanks)"
+              ></div>
+            </div>
+            <span class="gauge-text" style="color: var(--green-thanks)"
+              >100%</span
+            >
+          </div>
+        </div>
+        <h1 class="speech-question" id="mainHeaderTitle"></h1>
+        <p class="speech-guide" id="mainHeaderSub"></p>
+      </header>
+
+      <main class="epilogue-grid">
+        <div class="custom-cards-col" id="customCardsCol"></div>
+        <div class="stat-board" id="statBoard"></div>
+      </main>
+    </div>
+
+    <script>
+      const SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL'
+
+      const q1 = sessionStorage.getItem('q1') || 'Yes'
+      const q1Reason =
+        sessionStorage.getItem('q1_reason') ||
+        '다른 사람들의 시선이 신경 쓰여서'
+      const q2 = sessionStorage.getItem('q2') || 'Yes'
+      const q2Reason = sessionStorage.getItem('q2_reason') || '어색해서'
+      const q3Choice =
+        sessionStorage.getItem('q3_choice') ||
+        '어색한 정적을 깨고 분위기를 살려줘서 오히려 고맙다'
+      const myComment = sessionStorage.getItem('q3_comment') || ''
+
+      // 사전 조사 초기 데이터 (서버 미연동 시에도 내 응답을 즉시 합산해 동적으로 작동)
+      const fallbackStats = {
+        total: 42,
+        q1YesRate: 79,
+        q2YesRate: 74,
+        positiveRate: 95,
+        q1Reasons: {
+          '다른 사람들의 시선이 신경 쓰여서': 12,
+          '답을 몰라서': 6,
+          '자신이 없어서': 5,
+          '분위기를 깨뜨릴까 봐': 5,
+          '먼저 말하기 어색해서': 5,
+          '교수님이 민망하실까 봐': 4,
+          '나의 생각을 표현하고 싶어서': 2,
+          '발표에 자신이 있어서': 2,
+          '정답을 알아서': 1,
+        },
+        q2Reasons: {
+          '다른 사람들의 시선이 신경 쓰여서': 11,
+          '인사를 안 받아줄까 봐': 8,
+          어색해서: 12,
+          '감사한 마음을 표현하고 싶어서': 5,
+          '인사는 기본적인 예의라고 생각해서': 4,
+          '인사가 습관이 되어서': 2,
+        },
+        counts: {
+          '어색한 정적을 깨고 분위기를 살려줘서 오히려 고맙다': 18,
+          '답이 조금 틀리더라도 용기 내어 참여하는 모습이 멋지다': 11,
+          '밝게 인사하는 모습을 보면 나도 덩달아 기분이 좋아진다': 8,
+          '전혀 이상하게 보지 않고 자연스러운 일상이라고 생각한다': 3,
+          '조금 어색하거나 부담스럽게 느껴진다': 2,
+        },
+        recentComments: [],
+      }
+
+      // 로컬 테스트 시 내 선택을 초기 데이터에 +1 반영
+      if (!sessionStorage.getItem('live_stats')) {
+        fallbackStats.total += 1
+        fallbackStats.q1Reasons[q1Reason] =
+          (fallbackStats.q1Reasons[q1Reason] || 0) + 1
+        fallbackStats.q2Reasons[q2Reason] =
+          (fallbackStats.q2Reasons[q2Reason] || 0) + 1
+        fallbackStats.counts[q3Choice] =
+          (fallbackStats.counts[q3Choice] || 0) + 1
+      }
+
+      const q1FeedbackMap = {
+        '다른 사람들의 시선이 신경 쓰여서': {
+          title: '🌱 강의실의 시선, 걱정하지 않으셔도 괜찮아요!',
+          message:
+            '발표할 때 주변 학우들이 어떻게 볼지 신경 쓰여 망설이셨군요. 하지만 학우들은 먼저 발표하는 사람을 결코 부정적으로 보지 않습니다. 다음 수업에는 가벼운 고개 끄덕임이나 짧은 대답부터 시작해 볼까요?',
+          matchKey: '어색한 정적을 깨고 분위기를 살려줘서 오히려 고맙다',
+        },
+        '답을 몰라서': {
+          title: '🌱 정답이 아니어도 괜찮습니다, 참여 자체가 배려예요!',
+          message:
+            '틀린 답을 말할까 봐 망설이셨나요? 교수님과 학우들이 기다리는 건 완벽한 모범답안이 아니라 수업을 함께 만들어가는 작은 목소리입니다.',
+          matchKey: '답이 조금 틀리더라도 용기 내어 참여하는 모습이 멋지다',
+        },
+        '자신이 없어서': {
+          title: '🌱 완벽하지 않아도 당신의 목소리를 응원합니다!',
+          message:
+            '발표에 자신이 없어서 주저하셨군요. 처음부터 길게 말하지 않아도 괜찮습니다. 교수님의 질문에 눈을 맞추며 짧게 반응하는 작은 용기만으로도 충분합니다!',
+          matchKey: '답이 조금 틀리더라도 용기 내어 참여하는 모습이 멋지다',
+        },
+        '분위기를 깨뜨릴까 봐': {
+          title: '🌱 분위기를 깨는 게 아니라, 분위기를 살리는 역할입니다!',
+          message:
+            '조용한 강의실 분위기를 해칠까 봐 망설이셨나요? 사실 강의실의 모든 학우들이 누군가 먼저 어색한 침묵을 깨주기를 기다리고 있답니다.',
+          matchKey: '어색한 정적을 깨고 분위기를 살려줘서 오히려 고맙다',
+        },
+        '먼저 말하기 어색해서': {
+          title: '🌱 첫마디의 어색함 너머에 따뜻한 응원이 기다리고 있어요!',
+          message:
+            '조용한 수업 시간에 먼저 입을 떼는 건 누구에게나 어색합니다. 하지만 학우님의 짧은 대답 한마디가 교수님과 강의실 전체에 기분 좋은 활력을 선물합니다.',
+          matchKey: '전혀 이상하게 보지 않고 자연스러운 일상이라고 생각한다',
+        },
+        '교수님이 민망하실까 봐': {
+          title: '💌 교수님과 학우들이 당신의 따뜻한 배려에 감동했습니다!',
+          message:
+            '💌 [교수님의 감사 인사] "조용한 강의실에서 질문을 그냥 지나치지 않고 눈을 맞추며 대답해 준 그 마음이 정말 고맙습니다. 학생의 용기 있는 배려 덕분에 수업할 맛도 나고 큰 힘을 얻습니다!"',
+          matchKey: '어색한 정적을 깨고 분위기를 살려줘서 오히려 고맙다',
+        },
+        '나의 생각을 표현하고 싶어서': {
+          title: '💌 당당하게 생각을 나눠주신 덕분에 수업이 살아났습니다!',
+          message:
+            '💌 [함께 수업 듣는 학우의 감사 인사] "다들 눈치만 보고 있을 때 먼저 손을 들고 자신의 생각을 표현해 주셔서 정말 멋졌어요! 덕분에 강의실 공기가 훨씬 부드러워졌습니다."',
+          matchKey: '답이 조금 틀리더라도 용기 내어 참여하는 모습이 멋지다',
+        },
+        '발표에 자신이 있어서': {
+          title: '💌 당신의 든든한 자신감이 강의실에 활력을 불어넣습니다!',
+          message:
+            '💌 [교수님·학우들의 감사 인사] "망설임 없이 자신감 있게 발표를 이끌어 주셔서 고맙습니다! 학우님이 먼저 물꼬를 터주신 덕분에 다른 학우들도 편안하게 참여할 수 있었습니다."',
+          matchKey: '어색한 정적을 깨고 분위기를 살려줘서 오히려 고맙다',
+        },
+        '정답을 알아서': {
+          title: '💌 알고 있는 답을 기꺼이 나눠주신 멋진 배려, 고맙습니다!',
+          message:
+            '💌 [교수님의 감사 인사] "정답을 알고 있어도 망설이는 학생들이 많은데, 먼저 명쾌하게 대답해 주어 수업 흐름이 매끄럽게 이어졌습니다. 당신의 대답 한마디가 모두를 배려했습니다!"',
+          matchKey: '어색한 정적을 깨고 분위기를 살려줘서 오히려 고맙다',
+        },
+      }
+
+      const q2FeedbackMap = {
+        '다른 사람들의 시선이 신경 쓰여서': {
+          title: '🚌 셔틀버스 안의 시선, 사실은 모두가 미소 짓고 있어요!',
+          message:
+            '버스에 타는 다른 학우들의 시선이 신경 쓰여 기사님께 인사를 망설이셨군요. 하지만 실제로는 누군가 밝게 인사할 때 주변 학우들도 덩달아 기분이 좋아진다고 답했습니다!',
+          matchKey: '밝게 인사하는 모습을 보면 나도 덩달아 기분이 좋아진다',
+        },
+        '인사를 안 받아줄까 봐': {
+          title: '🚌 표현은 못 하셔도 기사님은 마음 깊이 고마워하십니다!',
+          message:
+            '기사님께서 운전 중이셔서 인사를 안 받아주실까 봐 걱정하셨나요? 기사님들은 학생들이 건네는 짧은 인사 한마디를 가장 큰 보람이자 에너지로 여기고 계십니다.',
+          matchKey: '밝게 인사하는 모습을 보면 나도 덩달아 기분이 좋아진다',
+        },
+        어색해서: {
+          title: '🚌 어색함을 이겨낸 1초의 인사가 기사님의 하루를 바꿉니다!',
+          message:
+            "조용한 버스 안에서 먼저 목소리를 내는 게 조금 어색하셨죠? 버스에 오를 때 가벼운 눈인사나 짧은 '안녕하세요' 한마디만 건네보세요. 생각보다 훨씬 기분 좋은 순간이 될 거예요!",
+          matchKey: '전혀 이상하게 보지 않고 자연스러운 일상이라고 생각한다',
+        },
+        '감사한 마음을 표현하고 싶어서': {
+          title: '💌 기사님께 전한 따뜻한 감사 인사, 그대로 감동이 되었습니다!',
+          message:
+            '💌 [셔틀버스 기사님의 감사 인사] "우리를 위해 운전해 주신다는 고마운 마음으로 건네준 \'안녕하세요, 감사합니다\' 한마디에 운전 피로가 눈 녹듯 사라집니다. 따뜻한 배려 덕분에 힘이 납니다!"',
+          matchKey: '밝게 인사하는 모습을 보면 나도 덩달아 기분이 좋아진다',
+        },
+        '인사는 기본적인 예의라고 생각해서': {
+          title: '💌 당연하게 실천한 예의가 누군가에겐 가장 큰 존중입니다!',
+          message:
+            '💌 [셔틀버스 기사님의 감사 인사] "기본적인 예의라며 잊지 않고 건네주는 밝은 인사가 운전석에서는 가장 큰 존중과 응원으로 다가옵니다. 예의 바르고 따뜻한 학생이 있어 늘 고맙습니다!"',
+          matchKey: '밝게 인사하는 모습을 보면 나도 덩달아 기분이 좋아진다',
+        },
+        '인사가 습관이 되어서': {
+          title: '💌 당신의 기분 좋은 인사 습관이 캠퍼스를 밝히고 있습니다!',
+          message:
+            '💌 [기사님·학우들의 감사 인사] "자연스러운 습관처럼 건네는 학우님의 밝은 인사가 셔틀버스 안의 공기를 따뜻하게 만들고 있습니다. 덕분에 뒤에 타는 학우들까지 함께 인사하게 됩니다!"',
+          matchKey: '전혀 이상하게 보지 않고 자연스러운 일상이라고 생각한다',
+        },
+      }
+
+      function renderPage(stats) {
+        const headerTitle = document.getElementById('mainHeaderTitle')
+        const headerSub = document.getElementById('mainHeaderSub')
+
+        if (q1 === 'Yes' && q2 === 'Yes') {
+          headerTitle.innerText =
+            '망설였던 순간들, 이제 작은 용기로 바꿔볼까요?'
+          headerSub.innerText =
+            '내가 선택한 망설임 이유에 맞춘 응원 메시지와 학우들의 실제 통계를 확인해 보세요.'
+        } else if (q1 === 'No' && q2 === 'No') {
+          headerTitle.innerText =
+            '당신의 용기 덕분에 우리가 매일 배려받고 있습니다!'
+          headerSub.innerText =
+            '먼저 나서서 발표하고 인사해 준 학우님께 도착한 감사 인사와 통계를 확인해 보세요.'
+        } else {
+          headerTitle.innerText =
+            '이미 실천 중인 멋진 배려와, 앞으로 내디딜 작은 용기!'
+          headerSub.innerText =
+            '학우님이 선택한 각 상황별 맞춤 감사 인사와 용기 통계를 확인해 보세요.'
+        }
+
+        const q1Data =
+          q1FeedbackMap[q1Reason] ||
+          q1FeedbackMap['다른 사람들의 시선이 신경 쓰여서']
+        const q2Data = q2FeedbackMap[q2Reason] || q2FeedbackMap['어색해서']
+
+        // 내가 선택한 이유에 공감한 실시간 인원수 및 매칭되는 Q3 긍정 통계 수치 계산
+        const q1SameCount =
+          stats.q1Reasons && stats.q1Reasons[q1Reason]
+            ? stats.q1Reasons[q1Reason]
+            : 8
+        const q2SameCount =
+          stats.q2Reasons && stats.q2Reasons[q2Reason]
+            ? stats.q2Reasons[q2Reason]
+            : 9
+        const q1MatchCount =
+          stats.counts && stats.counts[q1Data.matchKey]
+            ? stats.counts[q1Data.matchKey]
+            : 15
+        const q2MatchCount =
+          stats.counts && stats.counts[q2Data.matchKey]
+            ? stats.counts[q2Data.matchKey]
+            : 10
+
+        const q1StatText =
+          q1 === 'Yes'
+            ? `📊 실시간 맞춤 통계: 학우님처럼 '${q1Reason}'를 선택한 학우가 ${q1SameCount}명 있습니다. 하지만 전체의 ${stats.positiveRate}%가 나서는 사람을 긍정적으로 보며, 특히 ${q1MatchCount}명은 "${q1Data.matchKey}"라고 답했습니다!`
+            : `📊 실시간 맞춤 통계: 학우님처럼 '${q1Reason}'로 용기를 낸 분이 ${q1SameCount}명 계십니다! 덕분에 학우들의 ${stats.positiveRate}%가 긍정적인 에너지를 얻고 있습니다.`
+
+        const q2StatText =
+          q2 === 'Yes'
+            ? `📊 실시간 맞춤 통계: '${q2Reason}' 때문에 망설인 학우가 ${q2SameCount}명 있습니다. 하지만 ${stats.positiveRate}%의 학우들이 먼저 인사하는 모습을 따뜻하게 보며, ${q2MatchCount}명은 "${q2Data.matchKey}"라고 응원했습니다!`
+            : `📊 실시간 맞춤 통계: '${q2Reason}'로 먼저 인사를 건넨 학우가 ${q2SameCount}명 계십니다! 함께 타는 학우들의 ${stats.positiveRate}%가 당신의 인사 덕분에 기분이 좋아진다고 답했습니다.`
+
+        document.getElementById('customCardsCol').innerHTML = `
+      <div class="toon-result-card ${q1 === 'Yes' ? 'card-courage' : 'card-thanks'}">
+        <span class="choice-pill">📌 수업 발표 선택: "${q1Reason}"</span>
+        <div class="result-headline">${q1Data.title}</div>
+        <div class="speech-bubble-box">${q1Data.message}</div>
+        <div class="matched-stat-badge">${q1StatText}</div>
+      </div>
+
+      <div class="toon-result-card ${q2 === 'Yes' ? 'card-courage' : 'card-thanks'}">
+        <span class="choice-pill">📌 셔틀버스 인사 선택: "${q2Reason}"</span>
+        <div class="result-headline">${q2Data.title}</div>
+        <div class="speech-bubble-box">${q2Data.message}</div>
+        <div class="matched-stat-badge">${q2StatText}</div>
+      </div>
+    `
+
+        let barsHtml = ''
+        Object.entries(stats.counts).forEach(([label, count]) => {
+          const pct =
+            stats.total > 0 ? Math.round((count / stats.total) * 100) : 0
+          barsHtml += `
+        <div class="bar-row">
+          <div style="display:flex; justify-content:space-between;">
+            <span>${label}</span><span>${pct}% (${count}명)</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+        </div>
+      `
+        })
+
+        const latestComment = myComment
+          ? myComment
+          : stats.recentComments && stats.recentComments.length > 0
+            ? stats.recentComments[0]
+            : '작은 용기가 강의실과 셔틀버스를 따뜻하게 만듭니다. 내일 우리 함께 먼저 인사하고 대답해 봐요!'
+
+        document.getElementById('statBoard').innerHTML = `
+      <div>
+        <span class="step-tag">📊 3번 질문 실시간 통계 (총 ${stats.total}명 참여)</span>
+        <div class="big-stat-num">${stats.positiveRate}%가 긍정 응답!</div>
+        <p style="font-size:0.84rem; font-weight:700; color:#334155; margin-bottom:6px;">
+          수업 발표 망설임(${stats.q1YesRate}%), 버스 인사 망설임(${stats.q2YesRate}%)은 높았지만, 정작 타인이 나설 때는 <strong>${stats.positiveRate}%가 고마움과 호감</strong>을 느꼈습니다.
+        </p>
+        ${barsHtml}
+      </div>
+
+      <div style="margin-top: 12px; padding-top: 10px; border-top: 2px dashed var(--ink);">
+        <div style="font-weight:900; font-size:0.88rem; margin-bottom:6px;">💬 설문 참여 학우의 따뜻한 한마디</div>
+        <div class="speech-bubble-box" style="background:#fffbeb;">
+          "${latestComment}"
+        </div>
+      </div>
+    `
+      }
+
+      // 초기 렌더링 후, 서버 URL이 설정되어 있고 최신 데이터가 필요하면 백그라운드 갱신
+      const cached = sessionStorage.getItem('live_stats')
+      renderPage(cached ? JSON.parse(cached) : fallbackStats)
+
+      if (!cached && SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
+        fetch(SCRIPT_URL)
+          .then((r) => r.json())
+          .then((fresh) => renderPage(fresh))
+          .catch((e) => console.error(e))
+      }
+    </script>
+  </body>
+</html>

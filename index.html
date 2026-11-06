@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>질문 1 - 용기가 곧 배려다!</title>
+    <link rel="stylesheet" href="common.css" />
+  </head>
+  <body>
+    <div class="toon-page">
+      <header class="narration-bar">
+        <div class="header-top">
+          <span class="step-tag" id="stepTag">질문 1 / 3</span>
+          <div class="gauge-wrap">
+            <div class="gauge-track">
+              <div class="gauge-fill" id="gaugeFill" style="width: 15%"></div>
+            </div>
+            <span class="gauge-text" id="gaugeText">15%</span>
+          </div>
+          <button
+            class="rewind-btn"
+            id="backBtn"
+            style="display: none"
+            onclick="backToYn()"
+          >
+            ◀ 이전
+          </button>
+        </div>
+        <h1 class="speech-question" id="qText">
+          수업 시간에 발표하는 것이 망설여진 적이 있나요?
+        </h1>
+        <p class="speech-guide" id="qGuide">
+          나의 모습과 가까운 이미지를 선택해 주세요.
+        </p>
+      </header>
+
+      <main class="cut-stage">
+        <div class="scene-anim" id="sceneYn">
+          <div class="cut-grid cuts-2">
+            <div class="toon-cut" onclick="pickYn(this, 'Yes')">
+              <img
+                src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80"
+                alt="발표를 망설이는 모습"
+              />
+              <div class="sfx-stamp">망설임 💭</div>
+              <div class="cut-dialogue">
+                네 (Yes) — 손들고 발표하기가 망설여진 적 있어요
+              </div>
+            </div>
+
+            <div class="toon-cut" onclick="pickYn(this, 'No')">
+              <img
+                src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=900&q=80"
+                alt="발표하는 모습"
+              />
+              <div class="sfx-stamp">적극 참여 🙋‍♂️</div>
+              <div class="cut-dialogue">
+                아니오 (No) — 망설이지 않고 발표하는 편이에요
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="scene-anim" id="sceneReasons" style="display: none">
+          <div class="cut-grid" id="reasonsCutGrid"></div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const q1Cuts = {
+        Yes: [
+          {
+            text: '다른 사람들의 시선이 신경 쓰여서',
+            sfx: '시선의식 👀',
+            img: 'https://images.unsplash.com/photo-1507537297725-24a1c029d3ca?auto=format&fit=crop&w=600&q=80',
+          },
+          {
+            text: '답을 몰라서',
+            sfx: '어려움 ❓',
+            img: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=600&q=80',
+          },
+          {
+            text: '자신이 없어서',
+            sfx: '걱정 💦',
+            img: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80',
+          },
+          {
+            text: '분위기를 깨뜨릴까 봐',
+            sfx: '조심스러움 🤫',
+            img: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=600&q=80',
+          },
+          {
+            text: '먼저 말하기 어색해서',
+            sfx: '어색함 😅',
+            img: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=600&q=80',
+          },
+        ],
+        No: [
+          {
+            text: '교수님이 민망하실까 봐',
+            sfx: '배려 🤝',
+            img: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80',
+          },
+          {
+            text: '나의 생각을 표현하고 싶어서',
+            sfx: '의견표현 💡',
+            img: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=600&q=80',
+          },
+          {
+            text: '발표에 자신이 있어서',
+            sfx: '자신감 ✨',
+            img: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=600&q=80',
+          },
+          {
+            text: '정답을 알아서',
+            sfx: '명쾌함 🎯',
+            img: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80',
+          },
+        ],
+      }
+
+      function setGauge(percent) {
+        document.getElementById('gaugeFill').style.width = percent + '%'
+        document.getElementById('gaugeText').innerText = percent + '%'
+      }
+
+      function pickYn(cutEl, answer) {
+        cutEl.classList.add('action-picked')
+        sessionStorage.setItem('q1', answer)
+
+        setTimeout(() => {
+          setGauge(30)
+          document.getElementById('sceneYn').style.display = 'none'
+          document.getElementById('sceneReasons').style.display = 'flex'
+          document.getElementById('backBtn').style.display = 'inline-block'
+          document.getElementById('stepTag').innerText = '질문 1-1 / 3'
+          document.getElementById('qText').innerText =
+            answer === 'Yes'
+              ? '발표가 망설여졌던 가장 큰 이유는 무엇인가요?'
+              : '망설이지 않고 발표할 수 있었던 이유는 무엇인가요?'
+          document.getElementById('qGuide').innerText =
+            '가장 공감되는 이유 하나를 선택해 주세요.'
+
+          const grid = document.getElementById('reasonsCutGrid')
+          grid.className =
+            'cut-grid ' + (answer === 'Yes' ? 'cuts-5' : 'cuts-4')
+          grid.innerHTML = ''
+
+          q1Cuts[answer].forEach((item) => {
+            const div = document.createElement('div')
+            div.className = 'toon-cut'
+            div.innerHTML = `
+          <img src="${item.img}" alt="${item.text}">
+          <div class="sfx-stamp">${item.sfx}</div>
+          <div class="cut-dialogue">${item.text}</div>
+        `
+            div.onclick = () => pickReasonAndNext(div, item.text)
+            grid.appendChild(div)
+          })
+        }, 260)
+      }
+
+      function backToYn() {
+        setGauge(15)
+        document
+          .querySelectorAll('#sceneYn .toon-cut')
+          .forEach((el) => el.classList.remove('action-picked'))
+        document.getElementById('sceneReasons').style.display = 'none'
+        document.getElementById('sceneYn').style.display = 'flex'
+        document.getElementById('backBtn').style.display = 'none'
+        document.getElementById('stepTag').innerText = '질문 1 / 3'
+        document.getElementById('qText').innerText =
+          '수업 시간에 발표하는 것이 망설여진 적이 있나요?'
+        document.getElementById('qGuide').innerText =
+          '나의 모습과 가까운 이미지를 선택해 주세요.'
+      }
+
+      function pickReasonAndNext(cutEl, reasonText) {
+        cutEl.classList.add('action-picked')
+        sessionStorage.setItem('q1_reason', reasonText)
+        setGauge(45)
+
+        setTimeout(() => {
+          document.body.classList.add('page-exit')
+          setTimeout(() => {
+            window.location.href = 'q2.html'
+          }, 220)
+        }, 260)
+      }
+    </script>
+  </body>
+</html>
