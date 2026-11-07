@@ -135,12 +135,17 @@
     </div>
 
     <script>
-      const SCRIPT_URL = '여기에_웹앱_URL을_넣으세요'
+      const SCRIPT_URL =
+        'https://script.google.com/macros/s/AKfycbzf3IMvBPYKZ7VLX__5fBIijJ40fq38uoStBGErirW7-2QWHlMfZREZBoKVsTLGvXDz/exec'
       const FIVE_MIN_MS = 5 * 60 * 1000
 
       // [핵심 1] 학우가 3번 질문을 읽는 동안 백그라운드에서 5분 캐시 통계를 미리 받아옴
       ;(function prefetchStats() {
-        if (SCRIPT_URL === '여기에_웹앱_URL을_넣으세요') return
+        if (
+          SCRIPT_URL ===
+          'https://script.google.com/macros/s/AKfycbzf3IMvBPYKZ7VLX__5fBIijJ40fq38uoStBGErirW7-2QWHlMfZREZBoKVsTLGvXDz/exec'
+        )
+          return
         const cachedTime = Number(localStorage.getItem('stats_cache_time') || 0)
 
         // 저장된 지 5분이 넘었거나 데이터가 없으면 백그라운드에서 미리 가져오기
